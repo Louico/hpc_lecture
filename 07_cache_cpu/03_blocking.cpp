@@ -1,30 +1,18 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
-#include <sys/time.h>
+#include <vector>
+#include <chrono>
+#include <immintrin.h>
+using namespace std;
+typedef vector<vector<float>> matrix;
 
-int main(int argc, char **argv) {
-  int N = atoi(argv[1]);
-  float ** A = new float * [N];
-  float ** B = new float * [N];
-  float ** C = new float * [N];
-  for (int i=0; i<N; i++) {
-    A[i] = new float [N];
-    B[i] = new float [N];
-    C[i] = new float [N];
-    for (int j=0; j<N; j++) {
-      A[i][j] = drand48();
-      B[i][j] = drand48();
-      C[i][j] = 0;
-    }
-  }
-  struct timeval tic, toc;
-  gettimeofday(&tic, NULL);
+void matmult(matrix &A, matrix &B, matrix &C, int N) {
   const int m = N, n = N, k = N;
   const int kc = 512;
-  const int nc = 32;
+  const int nc = 64;
   const int mc = 256;
-  const int nr = 32;
+  const int nr = 64;
   const int mr = 32;
   float Ac[mc*kc];
   float Bc[kc*nc];
@@ -65,30 +53,34 @@ int main(int argc, char **argv) {
       }
     }
   }
-  gettimeofday(&toc, NULL);
-  double time = toc.tv_sec-tic.tv_sec+(toc.tv_usec-tic.tv_usec)*1e-6;
-  printf("N=%d: %lf s (%lf GFlops)\n",N,time,2.*N*N*N/time/1e9);
-#pragma omp parallel for
-  for (int i=0; i<N; i++) {
-    for (int k=0; k<N; k++) {
-      for (int j=0; j<N; j++) {
-        C[i][j] -= A[i][k] * B[k][j];
-      }
-    }
-  }
-  float err = 0;
+}
+
+int main(int argc, char **argv) {
+  const int N = 4096;
+  matrix A(N,vector<float>(N));
+  matrix B(N,vector<float>(N));
+  matrix C(N,vector<float>(N));
+  matmult(A,B,C,N);
   for (int i=0; i<N; i++) {
     for (int j=0; j<N; j++) {
-      err += fabs(C[i][j]);
+      A[i][j] = drand48();
+      B[i][j] = drand48();
+      C[i][j] = 0;
     }
   }
-  printf("error: %f\n",err/N/N);
-  for (int i=0; i<N; i++) {
-    delete[] A[i];
-    delete[] B[i];
-    delete[] C[i];
-  }
-  delete[] A;
-  delete[] B;
-  delete[] C;
+  auto tic = chrono::steady_clock::now();
+  matmult(A,B,C,N);
+  auto toc = chrono::steady_clock::now();
+  double time = chrono::duration<double>(toc - tic).count();
+  printf("N=%d: %lf s (%lf GFlops)\n",N,time,2.*N*N*N/time/1e9);
+#pragma omp parallel for
+  for (int i=0; i<N; i++)
+    for (int k=0; k<N; k++)
+      for (int j=0; j<N; j++)
+        C[i][j] -= A[i][k] * B[k][j];
+  double err = 0;
+  for (int i=0; i<N; i++)
+    for (int j=0; j<N; j++)
+      err += fabs(C[i][j]);
+  printf("error: %lf\n",err/N/N);
 }

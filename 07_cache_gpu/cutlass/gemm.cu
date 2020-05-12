@@ -83,14 +83,12 @@ int main(int argc, const char **argv) {
   printf("CUBLAS: %.2f Gflops, CUTLASS: %.2f Gflops\n", cublas_flops, cutlass_flops);
   C.sync_host();
   C2.sync_host();
-  double diff = 0, norm = 0;
+  double err = 0;
   for (int i=0; i<n; i++) {
-    //printf("%d %f %f\n",i,C.get(i,0), C2.get(i,0));
     for (int j=0; j<m; j++) {
-      diff += (C.get(i,j) - C2.get(i,j)) * (C.get(i,j) - C2.get(i,j));
-      norm += C.get(i,j) * C.get(i,j);
+      err += fabs(C.get(i,j) - C2.get(i,j));
     }
   }
-  printf("L2 Error: %lf\n", sqrtf(diff/norm));
+  printf("error: %lf\n", err/n/m);
   cublasDestroy(g_cublas_handle);
 }

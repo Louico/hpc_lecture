@@ -21,7 +21,7 @@ int main(void) {
   int *a;
   cudaMallocManaged(&a, N*sizeof(int));
   for (int i=0; i<N; i++) a[i] = 1;
-  reduction<<<N/M,M,M>>>(sum, a);
+  reduction<<<N/M,M,M*sizeof(int)>>>(sum, a);
   cudaDeviceSynchronize();
   printf("%d\n",sum);
   cudaFree(a);

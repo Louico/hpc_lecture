@@ -16,6 +16,7 @@ int main() {
   for(int k=0; k<N; k++) {
       j[k] = k;
   }
+
   for(int i=0; i<N; i++) {
 
 
@@ -81,6 +82,21 @@ int main() {
 
       //__m256 fxvec = _mm256_load_ps(fx);
       //__m256 fyvec = _mm256_load_ps(fy);
+
+      __m256 redufx = _mm256_permute2f128_ps(fxjvec,fxjvec,1);
+      fxjvec = _mm256_add_ps(fxjvec, redufx);
+      fxjvec = _mm256_hadd_ps(fxjvec, fxjvec);
+      fxjvec = _mm256_hadd_ps(fxjvec, fxjvec);
+
+      __m256 redufy = _mm256_permute2f128_ps(fyjvec,fyjvec,1);
+      fyjvec = _mm256_add_ps(fyjvec, redufy);
+      fyjvec = _mm256_hadd_ps(fyjvec, fyjvec);
+      fyjvec = _mm256_hadd_ps(fyjvec, fyjvec);
+
+
+      fx[i] -= fxjvec[0];
+      fy[i] -= fyjvec[0];
+      /*
       _mm256_store_ps(fxj,fxjvec);
       _mm256_store_ps(fyj,fyjvec);
       float fxjv = 0,fyjv = 0;
@@ -88,6 +104,8 @@ int main() {
           fxjv+=fxj[i];
           fyjv+=fyj[i];
       }
+
+
 
 
       //fx[i] -= rx * m[j] / (r * r * r);
@@ -99,5 +117,8 @@ int main() {
       fy[i] -= fyjv;
 
       printf("%d %g %g\n",i,fx[i],fy[i]);
+      */
   }
+  for(int i=0; i<N; i++)
+      printf("%d %g %g\n",i,fx[i],fy[i]);
 }

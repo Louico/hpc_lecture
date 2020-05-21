@@ -77,12 +77,6 @@ int main() {
 
 
 
-
-
-
-      //__m256 fxvec = _mm256_load_ps(fx);
-      //__m256 fyvec = _mm256_load_ps(fy);
-
       __m256 redufx = _mm256_permute2f128_ps(fxjvec,fxjvec,1);
       fxjvec = _mm256_add_ps(fxjvec, redufx);
       fxjvec = _mm256_hadd_ps(fxjvec, fxjvec);
@@ -104,9 +98,6 @@ int main() {
           fxjv+=fxj[i];
           fyjv+=fyj[i];
       }
-
-
-
 
       //fx[i] -= rx * m[j] / (r * r * r);
       //fy[i] -= ry * m[j] / (r * r * r);

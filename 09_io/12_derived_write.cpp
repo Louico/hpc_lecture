@@ -17,7 +17,8 @@ int main(int argc, char** argv) {
   int N[2] = {NX, NY};
   int Nlocal[2] = {NX/dim[0], NY/dim[1]};
   int offset[2] = {mpirank / dim[0], mpirank % dim[0]};
-  vector<int> buffer(Nlocal[0]*Nlocal[1],1);
+  for(int i=0; i<2; i++) offset[i] *= Nlocal[i];
+  vector<int> buffer(Nlocal[0]*Nlocal[1],mpirank);
   MPI_Datatype MPI_SUBARRAY;
   MPI_Type_create_subarray(2, N, Nlocal, offset,
 			   MPI_ORDER_C, MPI_INT, &MPI_SUBARRAY);

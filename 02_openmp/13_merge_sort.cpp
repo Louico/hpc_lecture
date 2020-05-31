@@ -47,11 +47,10 @@ int main() {
   printf("\n");
 #pragma omp parallel
   {
-#pragma omp single
-    merge_sort(vec, 0, n-1);
-};
 
-
+#pragma omp serial
+  merge_sort(vec, 0, n-1);
+  }
   for (int i=0; i<n; i++) {
     printf("%d ",vec[i]);
   }

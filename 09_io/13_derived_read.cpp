@@ -20,10 +20,12 @@ int main(int argc, char** argv) {
   int N[2] = {NX, NY};
   int Nlocal[2] = {NX/dim[0], NY/dim[1]};
   int offset[2] = {mpirank / dim[0], mpirank % dim[0]};
+  for(int i=0; i<2; i++) offset[i] *= Nlocal[i];
   vector<int> buffer(Nlocal[0]*Nlocal[1]);
   MPI_Datatype MPI_SUBARRAY;
   MPI_Type_create_subarray(2, N, Nlocal, offset,
 			   MPI_ORDER_C, MPI_INT, &MPI_SUBARRAY);
+  MPI_Type_commit(&MPI_SUBARRAY);
   MPI_File_set_view(file, 0, MPI_INT, MPI_SUBARRAY, "navite", MPI_INFO_NULL);
   auto tic = chrono::steady_clock::now();
   MPI_File_read_all(file, &buffer[0], Nlocal[0]*Nlocal[1], MPI_INT, MPI_STATUS_IGNORE);

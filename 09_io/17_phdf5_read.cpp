@@ -30,8 +30,9 @@ int main (int argc, char** argv) {
   hsize_t count[2] = {2,2};
   //hsize_t stride[2] = {1,1};
   hsize_t stride[2] = {NX/2,NY/2};
-  subdata[0]=(NX/4)*(NY/4)*4;
-  hid_t localspace = H5Screate_simple(1, subdata, NULL);
+  subdata[0]=(NX/2);
+  subdata[1]=(NY/2);
+  hid_t localspace = H5Screate_simple(2, subdata, NULL);
   H5Sselect_hyperslab(globalspace, H5S_SELECT_SET, offset, stride, count, Nlocal);
   H5Pclose(plist);
   vector<int> buffer(Nlocal[0]*Nlocal[1]*4);
@@ -47,7 +48,7 @@ int main (int argc, char** argv) {
   H5Pclose(plist);
   double time = chrono::duration<double>(toc - tic).count();
   int sum = 0;
-  for (int i=0; i<Nlocal[0]*Nlocal[1]; i++)
+  for (int i=0; i<Nlocal[0]*Nlocal[1]*4; i++)
     sum += buffer[i];
   printf("sum=%d\n",sum);
   printf("N=%d: %lf s (%lf GB/s)\n",NX*NY,time,4*NX*NY/time/1e9);

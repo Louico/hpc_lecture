@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
   MPI_Type_create_resized(MPI_FORCE, 0, 5*sizeof(double), &MPI_FORCE);
   MPI_Type_commit(&MPI_FORCE);
   MPI_Op MPI_FORCE_SUM;
-  MPI_Op_create((MPI_User_function *)sum, 1, &MPI_FORCE_SUM);
+  MPI_Op_create((MPI_User_function *)sum, 0, &MPI_FORCE_SUM);
   MPI_Allreduce(MPI_IN_PLACE, body, N, MPI_FORCE, MPI_FORCE_SUM, MPI_COMM_WORLD);
   for(int i=0; i<N; i++) {
     if(rank==0) printf("%d %g %g\n",i,body[i].fx,body[i].fy);

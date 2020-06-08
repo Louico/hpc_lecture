@@ -38,4 +38,6 @@ int main() {
   for (int i=0; i<n; i++)
     printf("%d ",key[i]);
   printf("\n");
+  cudaFree(key);
+  cudaFree(bucket);
 }

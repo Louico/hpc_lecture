@@ -27,6 +27,28 @@ void store_block(float *Ac, matrix &A, int mc, int nc, int ic, int jc) {
       A[i+ic][j+jc] += Ac[i*nc+j];
 }
 
+void micro_kernel(float *Ac, float *Bc, float *Cc, int kc, int nc, int ir, int jr, int kr, int nr, int mr) {
+  for (int i=ir; i<ir+mr; i++) {
+    __m256 Avec = _mm256_broadcast_ss(Ac+i*kc+kr);
+    for (int j=jr; j<jr+nr; j+=8) {
+      __m256 Bvec = _mm256_load_ps(Bc+kr*nc+j);
+      __m256 Cvec = _mm256_load_ps(Cc+i*nc+j);
+      Cvec = _mm256_fmadd_ps(Avec, Bvec, Cvec);
+      _mm256_store_ps(Cc+i*nc+j, Cvec);
+    }
+  }
+}
+
+void block_kernel(float *Ac, float *Bc, float *Cc, int kc, int nc, int mc, int nr, int mr) {
+  for (int jr=0; jr<nc; jr+=nr) {
+    for (int ir=0; ir<mc; ir+=mr) {
+      for (int kr=0; kr<kc; kr++) {
+	micro_kernel(Ac,Bc,Cc,kc,nc,ir,jr,kr,nr,mr);
+      }
+    }
+  }
+}
+
 void matmult(matrix &A, matrix &B, matrix &C, int N) {
   const int m = N, n = N, k = N;
   const int kc = 512;
@@ -34,35 +56,28 @@ void matmult(matrix &A, matrix &B, matrix &C, int N) {
   const int mc = 256;
   const int nr = 64;
   const int mr = 32;
-  float Cc[mc*nc];
-#pragma omp parallel for collapse(2) private(Cc)
+#pragma omp parallel for collapse(2)
   for (int jc=0; jc<n; jc+=nc) {
     for (int pc=0; pc<k; pc+=kc) {
       float Bc[kc*nc];
       load_block(Bc,B,kc,nc,pc,jc);
       for (int ic=0; ic<m; ic+=mc) {
-	float Ac[mc*kc];
+	float Ac[mc*kc],Cc[mc*nc];
 	load_block(Ac,A,mc,kc,ic,pc);
 	init_block(Cc,mc,nc);
-        for (int jr=0; jr<nc; jr+=nr) {
-          for (int ir=0; ir<mc; ir+=mr) {
-            for (int kr=0; kr<kc; kr++) {
-              for (int i=ir; i<ir+mr; i++) {
-		__m256 Avec = _mm256_broadcast_ss(Ac+i*kc+kr);
-                for (int j=jr; j<jr+nr; j+=8) {
-                  __m256 Bvec = _mm256_load_ps(Bc+kr*nc+j);
-                  __m256 Cvec = _mm256_load_ps(Cc+i*nc+j);
-                  Cvec = _mm256_fmadd_ps(Avec, Bvec, Cvec);
-                  _mm256_store_ps(Cc+i*nc+j, Cvec);
-		}
-              }
-            }
-          }
-        }
+	block_kernel(Ac,Bc,Cc,kc,nc,mc,nr,mr);
 	store_block(Cc,C,mc,nc,ic,jc);
       }
     }
   }
+}
+
+void matmult_check(matrix &A, matrix &B, matrix &C, int N) {
+#pragma omp parallel for
+  for (int i=0; i<N; i++)
+    for (int k=0; k<N; k++)
+      for (int j=0; j<N; j++)
+	C[i][j] -= A[i][k] * B[k][j];
 }
 
 int main(int argc, char **argv) {
@@ -83,11 +98,7 @@ int main(int argc, char **argv) {
   stopTimer();
   double time = getTime();
   printf("N=%d: %lf s (%lf GFlops)\n",N,time,2.*N*N*N/time/1e9);
-#pragma omp parallel for
-  for (int i=0; i<N; i++)
-    for (int k=0; k<N; k++)
-      for (int j=0; j<N; j++)
-        C[i][j] -= A[i][k] * B[k][j];
+  matmult_check(A,B,C,N);
   double err = 0;
   for (int i=0; i<N; i++)
     for (int j=0; j<N; j++)

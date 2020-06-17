@@ -15,5 +15,5 @@
 | Class 10 | Parallel debugger                    | 10_debugger               |
 | Class 11 | Parallel profiler                    | 11_profiler               |
 | Class 12 | Containers                           |                           |
-| Class 13 | Scientific computing                 | 13_fdm,13_solver          |
+| Class 13 | Scientific computing                 | 13_pde                    |
 | Class 14 | Deep Learning                        | 14_dl                     |

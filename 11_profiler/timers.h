@@ -1,4 +1,4 @@
-#define GETTIME 1
+//#define GETTIME 1
 
 #if TIME
 #include <time.h>
@@ -21,13 +21,14 @@ using namespace std::chrono;
 system_clock::time_point start;
 double elapse = 0;
 #elif GETTIME
+#include <time.h>
 struct timespec start;
 double elapse = 0;
 #elif OMP
 #include <omp.h>
 double start;
 double elapse;
-#elif MPI
+#elif MPIWTIME
 #include <mpi.h>
 double start;
 double elapse;
@@ -50,7 +51,7 @@ void startTimer() {
   clock_gettime(CLOCK_REALTIME, &start);
 #elif OMP
   start = omp_get_wtime();
-#elif MPI
+#elif MPIWTIME
   start = MPI_Wtime();
 #endif
 }
@@ -74,7 +75,7 @@ void stopTimer() {
   elapse += stop.tv_sec-start.tv_sec+(stop.tv_nsec-start.tv_nsec)*1e-9;
 #elif OMP
   elapse += omp_get_wtime() - start;
-#elif MPI
+#elif MPIWTIME
   elapse += MPI_Wtime() - start;
 #endif
 }
@@ -94,7 +95,7 @@ double getTime() {
   return elapse;
 #elif OMP
   return elapse;
-#elif MPI
+#elif MPIWTIME
   return elapse;
 #endif
 }

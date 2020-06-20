@@ -13,22 +13,22 @@ class ReLU(torch.autograd.Function):
         grad_input[input<0] = 0
         return grad_input
 
-EPOCHS = 300
-M = 64
-N_I = 1000
-N_H = 100
-N_O = 10
-LEARNING_RATE = 1.0e-06
+epochs = 300
+batch_size = 32
+D_in = 784
+H = 100
+D_out = 10
+learning_rate = 1.0e-06
 
 # create random input and output data
-x = torch.randn(M, N_I)
-y = torch.randn(M, N_O)
+x = torch.randn(batch_size, D_in)
+y = torch.randn(batch_size, D_out)
 
 # randomly initialize weights
-w1 = torch.randn(N_I, N_H, requires_grad=True)
-w2 = torch.randn(N_H, N_O, requires_grad=True)
+w1 = torch.randn(D_in, H, requires_grad=True)
+w2 = torch.randn(H, D_out, requires_grad=True)
 
-for t in range(EPOCHS):
+for epoch in range(epochs):
     # forward pass: compute predicted y
     relu = ReLU.apply
 
@@ -38,15 +38,15 @@ for t in range(EPOCHS):
 
     # compute and print loss
     loss = (y_p - y).pow(2).sum()
-    print(t, loss.item())
+    print(epoch, loss.item())
 
     # backward pass
     loss.backward()
 
     with torch.no_grad():
         # update weights
-        w1 -= LEARNING_RATE * w1.grad
-        w2 -= LEARNING_RATE * w2.grad
+        w1 -= learning_rate * w1.grad
+        w2 -= learning_rate * w2.grad
 
         # initialize weights
         w1.grad.zero_()

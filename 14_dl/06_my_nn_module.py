@@ -1,44 +1,46 @@
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
-class TwoLayerNet(torch.nn.Module):
-    def __init__(self, N_I, N_H, N_O):
+class TwoLayerNet(nn.Module):
+    def __init__(self, D_in, H, D_out):
         super(TwoLayerNet, self).__init__()
-        self.linear1 = torch.nn.Linear(N_I, N_H)
-        self.linear2 = torch.nn.Linear(N_H, N_O)
+        self.fc1 = nn.Linear(D_in, H)
+        self.fc2 = nn.Linear(H, D_out)
 
     def forward(self, x):
-        h = self.linear1(x)
-        h_r = h.clamp(min=0)
-        y_p = self.linear2(h_r)
+        h = self.fc1(x)
+        h_r = F.relu(h)
+        y_p = self.fc2(h_r)
         return y_p
 
-EPOCHS = 300
-M = 64
-N_I = 1000
-N_H = 100
-N_O = 10
-LEARNING_RATE = 1.0e-04
+epochs = 300
+batch_size = 32
+D_in = 784
+H = 100
+D_out = 10
+learning_rate = 1.0e-04
 
 # create random input and output data
-x = torch.randn(M, N_I)
-y = torch.randn(M, N_O)
+x = torch.randn(batch_size, D_in)
+y = torch.randn(batch_size, D_out)
 
 # define model
-model = TwoLayerNet(N_I, N_H, N_O)
+model = TwoLayerNet(D_in, H, D_out)
 
 # define loss function
-loss_fn = torch.nn.MSELoss(reduction='sum')
+criterion = nn.MSELoss(reduction='sum')
 
 # define optimizer
-optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
+optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
-for t in range(EPOCHS):
+for epoch in range(epochs):
     # forward pass: compute predicted y
     y_p = model(x)
 
     # compute and print loss
-    loss = loss_fn(y_p, y)
-    print(t, loss.item())
+    loss = criterion(y_p, y)
+    print(epoch, loss.item())
 
     # backward pass
     optimizer.zero_grad()

@@ -1,21 +1,21 @@
 import torch
 
-EPOCHS = 300
-M = 64
-N_I = 1000
-N_H = 100
-N_O = 10
-LEARNING_RATE = 1.0e-06
+epochs = 300
+batch_size = 32
+D_in = 784
+H = 100
+D_out = 10
+learning_rate = 1.0e-06
 
 # create random input and output data
-x = torch.randn(M, N_I)
-y = torch.randn(M, N_O)
+x = torch.randn(batch_size, D_in)
+y = torch.randn(batch_size, D_out)
 
 # randomly initialize weights
-w1 = torch.randn(N_I, N_H)
-w2 = torch.randn(N_H, N_O)
+w1 = torch.randn(D_in, H)
+w2 = torch.randn(H, D_out)
 
-for t in range(EPOCHS):
+for epoch in range(epochs):
     # forward pass: compute predicted y
     h = x.mm(w1)
     h_r = h.clamp(min=0)
@@ -23,7 +23,7 @@ for t in range(EPOCHS):
 
     # compute and print loss
     loss = (y_p - y).pow(2).sum().item()
-    print(t, loss)
+    print(epoch, loss)
 
     # backward pass: compute gradients of loss with respect to w2
     grad_y_p = 2.0 * (y_p - y)
@@ -36,5 +36,5 @@ for t in range(EPOCHS):
     grad_w1 = x.t().mm(grad_h)
 
     # update weights
-    w1 -= LEARNING_RATE * grad_w1
-    w2 -= LEARNING_RATE * grad_w2
+    w1 -= learning_rate * grad_w1
+    w2 -= learning_rate * grad_w2

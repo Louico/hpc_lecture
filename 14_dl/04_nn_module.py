@@ -1,33 +1,33 @@
 import torch
 
-EPOCHS = 300
-M = 64
-N_I = 1000
-N_H = 100
-N_O = 10
-LEARNING_RATE = 1.0e-04
+epochs = 300
+batch_size = 32
+D_in = 784
+H = 100
+D_out = 10
+learning_rate = 1.0e-04
 
 # create random input and output data
-x = torch.randn(M, N_I)
-y = torch.randn(M, N_O)
+x = torch.randn(batch_size, D_in)
+y = torch.randn(batch_size, D_out)
 
 # define model
 model = torch.nn.Sequential(
-        torch.nn.Linear(N_I, N_H),
+        torch.nn.Linear(D_in, H),
         torch.nn.ReLU(),
-        torch.nn.Linear(N_H, N_O),
+        torch.nn.Linear(H, D_out),
         )
 
 # define loss function
-loss_fn = torch.nn.MSELoss(reduction='sum')
+criterion = torch.nn.MSELoss(reduction='sum')
 
-for t in range(EPOCHS):
+for epoch in range(epochs):
     # forward pass: compute predicted y
     y_p = model(x)
 
     # compute and print loss
-    loss = loss_fn(y_p, y)
-    print(t, loss.item())
+    loss = criterion(y_p, y)
+    print(epoch, loss.item())
 
     # backward pass
     model.zero_grad()
@@ -36,4 +36,4 @@ for t in range(EPOCHS):
     with torch.no_grad():
         # update weights
         for param in model.parameters():
-            param -= LEARNING_RATE * param.grad
+            param -= learning_rate * param.grad

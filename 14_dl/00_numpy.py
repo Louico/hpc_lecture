@@ -1,21 +1,21 @@
 import numpy as np
 
-EPOCHS = 300
-M = 64
-N_I = 1000
-N_H = 100
-N_O = 10
-LEARNING_RATE = 1.0e-06
+epochs = 300
+batch_size = 32
+D_in = 784
+H = 100
+D_out = 10
+learning_rate = 1.0e-06
 
 # create random input and output data
-x = np.random.randn(M, N_I)
-y = np.random.randn(M, N_O)
+x = np.random.randn(batch_size, D_in)
+y = np.random.randn(batch_size, D_out)
 
 # randomly initialize weights
-w1 = np.random.randn(N_I, N_H)
-w2 = np.random.randn(N_H, N_O)
+w1 = np.random.randn(D_in, H)
+w2 = np.random.randn(H, D_out)
 
-for t in range(EPOCHS):
+for epoch in range(epochs):
     # forward pass
     h = x.dot(w1) # h = x * w1
     h_r = np.maximum(h, 0) # h_r = ReLU(h)
@@ -23,7 +23,7 @@ for t in range(EPOCHS):
 
     # compute mean squared error and print loss
     loss = np.square(y_p - y).sum()
-    print(t, loss)
+    print(epoch, loss)
 
     # backward pass: compute gradients of loss with respect to w2
     grad_y_p = 2.0 * (y_p - y)
@@ -36,5 +36,5 @@ for t in range(EPOCHS):
     grad_w1 = x.T.dot(grad_h)
 
     # update weights
-    w1 -= LEARNING_RATE * grad_w1
-    w2 -= LEARNING_RATE * grad_w2
+    w1 -= learning_rate * grad_w1
+    w2 -= learning_rate * grad_w2

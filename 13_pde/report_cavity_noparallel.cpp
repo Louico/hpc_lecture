@@ -121,23 +121,7 @@ int main(int argc, char** argv){
     int c = 1;
     double dx = (double)2 / (nx - 1);
     double dy = (double)2 / (ny - 1);
-    /*
-    vector_1d x(nx);
-    vector_1d y(ny);
-    double t = 0;
-    for(int i=0, i<nx, i++){
-        x[i] = t;
-        t += dx;
-    }
-    t = 0;
-    for(int i=0, i<nx, i++){
-        y[i] = t;
-        t += dy;
-    }
-    vector_2d X(nx, x);
-    vector_2d Y(ny, vector_1d(ny));
-    for int
-    */
+   
     double rho = 1;
     double nu = 0.1;
     double dt = 0.001;

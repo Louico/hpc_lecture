@@ -42,7 +42,7 @@ vector_2d pressure_poisson(vector_2d p, double dx, double dy, vector_2d b, int n
     for(int q=0; q<nit; q++){
         copy_2d(p, pn);
         for(int i=1; i<p.size()-1; i++){
-            for(int j=0; j<p.at(0).size()-1; j++){
+            for(int j=1; j<p.at(0).size()-1; j++){
                 p[i][j] = ((pn[i][j+1] + pn[i][j-1]) * pow(dy, 2) +
                            (pn[i+1][j] + pn[i-1][j]) * pow(dx, 2)) /
                           (2 * (pow(dx, 2) + pow(dy, 2))) -

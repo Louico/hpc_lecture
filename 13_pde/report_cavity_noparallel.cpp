@@ -5,6 +5,8 @@
 #include <vector>
 #include <fstream>
 #include <math.h>
+#include "timers.h"
+#include <chrono>
 
 using namespace std;
 
@@ -129,7 +131,16 @@ int main(int argc, char** argv){
     vector_2d v(ny,vector_1d(nx,0));
     vector_2d p(ny,vector_1d(nx,0));
     vector_2d b(ny,vector_1d(nx,0));
+    startTimer();
+
     cavity_flow(nt, u, v, dt, dx, dy, p, rho, nu, nit);
+
+
+    stopTimer();
+    double time = getTime();
+    printf(" %lf s\n",time);
+
+
     ofstream u_out("u.txt");
     ofstream v_out("v.txt");
     ofstream p_out("p.txt");

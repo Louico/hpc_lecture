@@ -8,6 +8,9 @@
 #include <math.h>
 #include <omp.h>
 
+#include "timers.h"
+#include <chrono>
+
 using namespace std;
 
 typedef vector<vector<double> > vector_2d;
@@ -138,7 +141,15 @@ int main(int argc, char** argv){
     vector_2d v(ny,vector_1d(nx,0));
     vector_2d p(ny,vector_1d(nx,0));
     vector_2d b(ny,vector_1d(nx,0));
+
+    startTimer();
+
     cavity_flow(nt, u, v, dt, dx, dy, p, rho, nu, nit);
+
+
+    stopTimer();
+    double time = getTime();
+    printf(" %lf s\n",time);
     ofstream u_out("u_openmp.txt");
     ofstream v_out("v_openmp.txt");
     ofstream p_out("p_openmp.txt");

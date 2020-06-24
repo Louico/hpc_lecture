@@ -17,7 +17,7 @@ using namespace std;
 typedef vector<vector<double> > vector_2d;
 typedef vector<double> vector_1d;
 void copy_2d(vector_2d &from, vector_2d &to){
-
+#pragma acc parallel loop
     for(int i=0; i<from.size(); i++){
         for(int j=0; j<from.at(0).size(); j++){
             to[i][j] = from[i][j];

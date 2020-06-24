@@ -1,6 +1,7 @@
 //
 // Created by 张骁尧 on 2020/06/24.
 // only work for process number =3,13,39; and still need optimize
+// add MPI parallel on poisson func time 5.8s->2.9s
 
 #include <iostream>
 #include <vector>
@@ -40,31 +41,6 @@ vector_2d build_up_b(vector_2d &b, double rho, double dt, vector_2d u, vector_2d
     return b;
 };
 
-vector_2d pressure_poisson(vector_2d p, double dx, double dy, vector_2d b, int nit){
-    vector_2d pn(p.size(),vector_1d(p.at(0).size(),0));
-    copy_2d(p, pn);
-    for(int q=0; q<nit; q++){
-        copy_2d(p, pn);
-        for(int i=1; i<p.size()-1; i++){
-            for(int j=0; j<p.at(0).size()-1; j++){
-                p[i][j] = ((pn[i][j+1] + pn[i][j-1]) * pow(dy, 2) +
-                           (pn[i+1][j] + pn[i-1][j]) * pow(dx, 2)) /
-                          (2 * (pow(dx, 2) + pow(dy, 2))) -
-                          pow(dx, 2) * pow(dy, 2) / (2 * (pow(dx, 2) + pow(dy, 2))) *
-                          b[i][j];
-            }
-        }
-        for(int i=0; i<p.size(); i++){
-            p[i][p.at(0).size()-1] = p[i][p.at(0).size()-2];
-            p[i][0] = p[i][1];
-        }
-        for(int j=0; j<p.at(0).size(); j++){
-            p[0][j] = p[1][j];
-            p[p.size()-1][j] = 0;
-        }
-    }
-    return p;
-}
 
 
 
@@ -93,7 +69,9 @@ int main(int argc, char** argv) {
     int end = begin + size_rank;
     double ucopy[ny][nx];
     double vcopy[ny][nx];
+    double pcopy[ny][nx];
     double buffer[size_rank * 2][nx];
+    double bufferp[size_rank][nx];
 
     startTimer();
 
@@ -106,7 +84,88 @@ int main(int argc, char** argv) {
         copy_2d(v, vn);
 
         b = build_up_b(b, rho, dt, u, v, dx, dy);
-        p = pressure_poisson(p, dx, dy, b, nit);
+
+
+        vector_2d pn(p.size(), vector_1d(p.at(0).size(), 0));
+        copy_2d(p, pn);
+        for (int q = 0; q < nit; q++) {
+            copy_2d(p, pn);
+            if(rank!=0) {
+                int k = 0;
+
+                for (int i = begin; i < end; i++) {
+                    for (int j = 1; j < p.at(0).size() - 1; j++) {
+                        bufferp[k][j] = ((pn[i][j + 1] + pn[i][j - 1]) * pow(dy, 2) +
+                                   (pn[i + 1][j] + pn[i - 1][j]) * pow(dx, 2)) /
+                                  (2 * (pow(dx, 2) + pow(dy, 2))) -
+                                  pow(dx, 2) * pow(dy, 2) / (2 * (pow(dx, 2) + pow(dy, 2))) *
+                                  b[i][j];
+                    }
+                    k++;
+                }
+                MPI_Send(bufferp, size_rank * nx, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+                MPI_Recv(pcopy, ny * nx, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                for (int i = 0; i < ny; i++) {
+                    for (int j = 0; j < nx; j++) {
+                        p[i][j] = pcopy[i][j];
+                    }
+                }
+
+
+
+            }
+
+            else {
+
+                for (int i = 1; i < 1+size_rank; i++) {
+                    for (int j = 1; j < p.at(0).size() - 1; j++) {
+                        p[i][j] = ((pn[i][j + 1] + pn[i][j - 1]) * pow(dy, 2) +
+                                   (pn[i + 1][j] + pn[i - 1][j]) * pow(dx, 2)) /
+                                  (2 * (pow(dx, 2) + pow(dy, 2))) -
+                                  pow(dx, 2) * pow(dy, 2) / (2 * (pow(dx, 2) + pow(dy, 2))) *
+                                  b[i][j];
+                    }
+                }
+
+                for(int irank=1;irank<size;irank++){
+                    MPI_Recv(bufferp,size_rank * nx,MPI_DOUBLE,irank,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+                    for(int i=0;i<size_rank;i++){
+                        for(int j=1;j<nx-1;j++){
+                            p[irank*size_rank+1+i][j] = bufferp[i][j];
+                        }
+                    }
+                }
+
+
+                for (int i = 0; i < p.size(); i++) {
+                    p[i][p.at(0).size() - 1] = p[i][p.at(0).size() - 2];
+                    p[i][0] = p[i][1];
+                }
+                for (int j = 0; j < p.at(0).size(); j++) {
+                    p[0][j] = p[1][j];
+                    p[p.size() - 1][j] = 0;
+                }
+
+                for(int i=0;i<ny;i++){
+                    for(int j=0;j<nx;j++){
+                        pcopy[i][j] = p[i][j];
+                    }
+                }
+                for(int irank=1;irank<size;irank++){
+                    MPI_Send(pcopy,ny*nx,MPI_DOUBLE,irank,0,MPI_COMM_WORLD);
+                }
+
+
+
+            }
+
+
+
+        }
+
+
+
+
 
         if (rank != 0) {
             int k = 0;
